@@ -20,6 +20,7 @@ public class Animation
 	}
 	public boolean isValidAnimation() throws IOException
 	{
+		if (data.length()<16) return false; //prevents EOFException
 		boolean headerCheck=false;
 		data.seek(0);
 		byte header1 = data.readByte();
