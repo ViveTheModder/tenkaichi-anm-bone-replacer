@@ -33,103 +33,114 @@ public class Animation
 		if (header2==0 && header3==0 && headerCheck) return true;
 		return false;
 	}
-	private byte[] getUpdatedTailBoneContents(byte[] contents, short dstAnmFrames)
+	private byte[] getUpdatedBoneContents(byte[] contents, short dstAnmFrames)
 	{
-		if (contents[0]==1) //check if bone only has rotation data (not translation and rotation)
+		byte[] bytes = new byte[2];
+		short currKeyframe=0;
+		System.arraycopy(contents, 2, bytes, 0, 2);
+		short numKeyframes = LittleEndian.getShortFromByteArray(bytes);
+		int step = dstAnmFrames/numKeyframes; //average step
+		int lastKeyframeIndex = numKeyframes-1, pos=0, posLastKeyframe=0;
+		
+		for (int i=0; i<numKeyframes; i++)
 		{
-			byte[] bytes = new byte[2];
-			short currKeyframe=0;
-			System.arraycopy(contents, 2, bytes, 0, 2);
-			short numKeyframes = LittleEndian.getShortFromByteArray(bytes);
-			int step = dstAnmFrames/numKeyframes; //average step
-			int lastKeyframeIndex = numKeyframes-1;
-			for (int i=0; i<numKeyframes; i++)
-			{
-				int pos = 4+(8*numKeyframes)+(2*i);
-				System.arraycopy(LittleEndian.getByteArrayFromShort(LittleEndian.getShort(currKeyframe)), 0, contents, pos, 2);
-				currKeyframe+=step;
-			}
-			int posLastKeyframe = 4+(8*numKeyframes)+(2*lastKeyframeIndex);
-			System.arraycopy(LittleEndian.getByteArrayFromShort(LittleEndian.getShort(dstAnmFrames)), 0, contents, posLastKeyframe, 2);
+			if (contents[0]==1) pos = 4+(8*numKeyframes)+(2*i);
+			else if (contents[0]==0) pos = 16*(i+1)+(8*i);
+			System.arraycopy(LittleEndian.getByteArrayFromShort(LittleEndian.getShort(currKeyframe)), 0, contents, pos, 2);
+			currKeyframe+=step;
 		}
+		if (contents[0]==1) posLastKeyframe = 4+(8*numKeyframes)+(2*lastKeyframeIndex);
+		else if (contents[0]==0) pos = 16*(lastKeyframeIndex+1)+(8*lastKeyframeIndex);
+		System.arraycopy(LittleEndian.getByteArrayFromShort(LittleEndian.getShort(dstAnmFrames)), 0, contents, posLastKeyframe, 2);
 		return contents;
 	}
 	public RandomAccessFile getData()
 	{
 		return data;
 	}
-	public void replaceTailBoneContents(Animation srcAnm) throws IOException
+	public void replaceBoneContents(Animation srcAnm, int startBoneId, int endBoneId) throws IOException
 	{
+		int startOffset = 6+(2*startBoneId), endOffset = 6+(2*endBoneId);
+		int numBones = endBoneId-startBoneId+1;
 		data.seek(2); //location of number of frames
 		short dstAnmFrames = LittleEndian.getShort(data.readShort());
-		short[] srcTailBoneAddrs = new short[4];
-		short[] dstTailBoneAddrs = new short[4];
-		int[] srcTailBoneSizes = new int[4];
+		int[] srcBoneAddrs = new int[numBones];
+		int[] dstBoneAddrs = new int[numBones];
+		int[] srcBoneSizes = new int[numBones];
 		RandomAccessFile srcData = srcAnm.getData();
 		
-		srcData.seek(14); //location of TAIL1 offset
-		for (int i=0; i<4; i++)
+		srcData.seek(startOffset);
+		for (int i=0; i<numBones; i++)
 		{
-			srcTailBoneAddrs[i] = LittleEndian.getShort(srcData.readShort());
-			srcTailBoneAddrs[i]*=4;
+			srcBoneAddrs[i] = LittleEndian.getShort(srcData.readShort());
+			srcBoneAddrs[i]*=4;
+			srcBoneAddrs[i] = srcBoneAddrs[i]&0xFFFF;
 		}
-		short srcRightHipAddr = LittleEndian.getShort(srcData.readShort());
-		srcRightHipAddr*=4;
-		for (int i=1; i<4; i++)
-			srcTailBoneSizes[i-1] = srcTailBoneAddrs[i]-srcTailBoneAddrs[i-1];
-		srcTailBoneSizes[3] = srcRightHipAddr-srcTailBoneAddrs[3];
+		int srcNextBoneAddr = LittleEndian.getShort(srcData.readShort());
+		srcNextBoneAddr*=4;
+		srcNextBoneAddr = srcNextBoneAddr&0xFFFF;
+		for (int i=1; i<numBones; i++)
+			srcBoneSizes[i-1] = srcBoneAddrs[i]-srcBoneAddrs[i-1];
+		srcBoneSizes[numBones-1] = srcNextBoneAddr-srcBoneAddrs[numBones-1];
 		
-		byte[] srcTailBoneContents = new byte[srcRightHipAddr-srcTailBoneAddrs[0]];
-		srcData.seek(srcTailBoneAddrs[0]);
-		srcData.read(srcTailBoneContents);
+		byte[] srcBoneContents = new byte[srcNextBoneAddr-srcBoneAddrs[0]];
+		srcData.seek(srcBoneAddrs[0]);
+		srcData.read(srcBoneContents);
 		int pos=0;
-		for (int i=0; i<4; i++)
+		for (int i=0; i<numBones; i++)
 		{
-			byte[] newTailBone = new byte[srcTailBoneSizes[i]];
-			System.arraycopy(srcTailBoneContents, pos, newTailBone, 0, newTailBone.length);
-			newTailBone = getUpdatedTailBoneContents(newTailBone, dstAnmFrames);
-			System.arraycopy(newTailBone, 0, srcTailBoneContents, pos, newTailBone.length);
-			pos+=newTailBone.length;
+			byte[] newBone = new byte[srcBoneSizes[i]];
+			System.arraycopy(srcBoneContents, pos, newBone, 0, newBone.length);
+			newBone = getUpdatedBoneContents(newBone, dstAnmFrames);
+			System.arraycopy(newBone, 0, srcBoneContents, pos, newBone.length);
+			pos+=newBone.length;
 		}
 		
-		data.seek(14); //location of TAIL1 offset
-		for (int i=0; i<4; i++)
+		data.seek(startOffset);
+		for (int i=0; i<numBones; i++)
 		{
-			dstTailBoneAddrs[i] = LittleEndian.getShort(data.readShort());
-			dstTailBoneAddrs[i]*=4;
+			dstBoneAddrs[i] = LittleEndian.getShort(data.readShort());
+			dstBoneAddrs[i]*=4;
+			dstBoneAddrs[i] = dstBoneAddrs[i]&0xFFFF;
 		}
-		short dstRightHipAddr = LittleEndian.getShort(data.readShort());
-		dstRightHipAddr*=4;
-		int dstTailContentSize = dstRightHipAddr-dstTailBoneAddrs[0];
-		int diff = dstTailContentSize-srcTailBoneContents.length;
-		int offsetDiff = (srcTailBoneAddrs[0]-dstTailBoneAddrs[0])/4;
+		int dstNextBoneAddr = LittleEndian.getShort(data.readShort());
+		dstNextBoneAddr*=4;
+		dstNextBoneAddr = dstNextBoneAddr&0xFFFF;
+		int dstTailContentSize = dstNextBoneAddr-dstBoneAddrs[0];
+		int diff = dstTailContentSize-srcBoneContents.length;
+		int offsetDiff = (srcBoneAddrs[0]-dstBoneAddrs[0])/4;
 		if (diff!=0)
 		{
 			//fix offsets
-			data.seek(22); //location of HIP_R offset
-			for (int offsetCnt=0; offsetCnt<53; offsetCnt++)
+			data.seek(endOffset+2);
+			for (int offsetCnt=0; offsetCnt<68-(((endOffset+2)-6)/2); offsetCnt++)
 			{
+				pos = (int)data.getFilePointer();
 				short offset = LittleEndian.getShort(data.readShort());
+				data.seek(pos);
 				if (offset==0) continue;
-				data.seek(data.getFilePointer()-2);
 				offset-=(diff/4);
-				data.writeShort(LittleEndian.getShort(offset));
+				if (pos<116) data.writeShort(LittleEndian.getShort(offset));
+				else //overwrite offsets of OPTION/EQUIPMENT bones if their data is affected by the replacement
+				{
+					if (offset>(dstBoneAddrs[numBones-1]/4)) data.writeShort(LittleEndian.getShort(offset));
+				}
 			}
-			data.seek(14); //location of TAIL1 offset
-			for (int offsetCnt=0; offsetCnt<4; offsetCnt++)
-				data.writeShort(LittleEndian.getShort((short)((srcTailBoneAddrs[offsetCnt]/4)-offsetDiff)));
+			data.seek(startOffset);
+			for (int offsetCnt=0; offsetCnt<numBones; offsetCnt++)
+				data.writeShort(LittleEndian.getShort((short)((srcBoneAddrs[offsetCnt]/4)-offsetDiff)));
 			//overwriting process
-			data.seek(dstRightHipAddr);
-			byte[] restOfFileContents = new byte[(int)(data.length()-dstRightHipAddr)];
+			data.seek(dstNextBoneAddr);
+			byte[] restOfFileContents = new byte[(int)(data.length()-dstNextBoneAddr)];
 			data.read(restOfFileContents);
-			data.seek(dstTailBoneAddrs[0]);
-			data.write(srcTailBoneContents);
+			data.seek(dstBoneAddrs[0]);
+			data.write(srcBoneContents);
 			data.write(restOfFileContents);
 		}
 		else
 		{
-			data.seek(dstTailBoneAddrs[0]);
-			data.write(srcTailBoneContents);
+			data.seek(dstBoneAddrs[0]);
+			data.write(srcBoneContents);
 		}
 		data.close();
 	}
