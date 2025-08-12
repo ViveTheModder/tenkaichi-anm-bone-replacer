@@ -1,5 +1,5 @@
-# tenkaichi-anm-tail-replacer
-A command-line modding tool for the PS2 version of Budokai Tenkaichi 2 or 3 that can **edit ANM files from those games**, by **taking the tail bone contents of ANMs** located in a source folder, and **assigning them** to ANMs located in a destination folder.
+# tenkaichi-anm-bone-replacer
+A command-line modding tool for the PS2 version of Budokai Tenkaichi 2 or 3 that can **edit ANM files from those games**, by **taking ANY specified bone contents of ANMs** located in a source folder, and **assigning them** to ANMs located in a destination folder.
 
 For the program to work as intended, the ANM files in both source & destination folders **do not necessarily need to have identical file names**.
 
@@ -9,13 +9,15 @@ A good way of achieving this is to number the ANMs in both folders the same way.
 For example: ``SRC01.anm -> DST01.anm``, ``SRC02.anm -> DST02.anm``, and so on...
 
 # Usage
-<img width="1078" height="532" alt="image" src="https://github.com/user-attachments/assets/cc2453e5-d63c-4408-8762-83e6c83a040e" />
+![bafkreiazigchegufsbozgwmbkjdll67ht2x4ctv3wypivqaw4kn3cy5hv4](https://github.com/user-attachments/assets/7dea6a44-73d2-4889-b071-1e01787dda10)
 
-<img width="1233" height="509" alt="image" src="https://github.com/user-attachments/assets/0a7da9a8-7f88-427a-a9bd-666f64ddcc2d" />
-
-<img width="1215" height="511" alt="image" src="https://github.com/user-attachments/assets/fe826bc6-8935-4b4b-a05d-99b7708aaeec" />
+![bafkreifupw6oy4z6dqaptvwqunv2cqtlwqgdn6krwgwjocme7ptry4i4qy](https://github.com/user-attachments/assets/10ff6d5e-20ce-4316-951e-7895e17af2e5)
 
 # Results
+![bafkreiemnumet4g2qjniadpuq66c5le6xb5maxemezh6hi5532sqnwmja4](https://github.com/user-attachments/assets/8bd8ba2b-f84d-4a8c-ae97-c6af0286fde7)
+
+![bafkreigp7hn4go6kc3wtzojruk733mr7znkn4xbakk35rfqftuimxv2eo4](https://github.com/user-attachments/assets/b77196d5-b402-4505-8f02-1a7ceaff88aa)
+
 <img width="809" height="730" alt="image" src="https://github.com/user-attachments/assets/fb317ec5-61cd-4b41-8202-64808726de08" />
 
 <img width="808" height="730" alt="image" src="https://github.com/user-attachments/assets/5f03b499-4c70-4b69-a3a5-aa88c360b03b" />
