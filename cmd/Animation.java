@@ -136,6 +136,7 @@ public class Animation
 			data.seek(dstBoneAddrs[0]);
 			data.write(srcBoneContents);
 			data.write(restOfFileContents);
+			data.setLength(data.length()-diff);
 		}
 		else
 		{
