@@ -1,5 +1,5 @@
 package gui;
-//Tenkaichi ANM Tail Replacer by ViveTheModder
+//Tenkaichi ANM Bone Replacer by ViveTheModder
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -45,7 +45,7 @@ public class App
 	private static final Font MED = new Font("Tahoma", 0, 18);
 	private static final String HTML_A_START = "<html><a href=''>";
 	private static final String HTML_A_END = "</a></html>";
-	private static final String WINDOW_TITLE = "Tenkaichi ANM Bone Replacer v1.3";
+	private static final String WINDOW_TITLE = "Tenkaichi ANM Bone Replacer v1.4";
 	private static final Toolkit DEF_TOOLKIT = Toolkit.getDefaultToolkit();
 
 	public static void errorBeep()
@@ -151,7 +151,7 @@ public class App
 				{
 					int[] boneIds = new int[2];
 					for (int i=0; i<2; i++) boneIds[i] = dropdowns[i].getSelectedIndex();
-					setProgress(frame,boneIds);
+					setProgress(frame,boneIds,boneNames);
 				}
 			}
 		});
@@ -187,7 +187,7 @@ public class App
 		frame.setTitle(WINDOW_TITLE);
 		frame.setVisible(true);
 	}
-	private static void setProgress(JFrame frame, int[] boneIds)
+	private static void setProgress(JFrame frame, int[] boneIds, String[] boneNames)
 	{
 		//change progress bar settings (must be done before declaring)
 	    UIManager.put("ProgressBar.background", Color.WHITE);
@@ -230,7 +230,7 @@ public class App
 			{
 				long start = System.currentTimeMillis();
 				frame.setEnabled(false);
-				String error = Main.writeSrcAnms(currFolders, boneIds, null);
+				String error = Main.writeSrcAnms(currFolders, boneIds, boneNames);
 				long finish = System.currentTimeMillis();
 				double time = (finish-start)/1000.0;
 				
@@ -243,7 +243,9 @@ public class App
 				else
 				{
 					DEF_TOOLKIT.beep();
-					JOptionPane.showMessageDialog(null, anmCnt+" ANM files have been changed in "+time+" seconds!", App.WINDOW_TITLE, 1);
+					String success = " ANM files have been changed in "+time+" seconds!";
+					if (anmCnt==1) success = success.replace("s have", " has");
+					JOptionPane.showMessageDialog(null, anmCnt+success, App.WINDOW_TITLE, 1);
 					dialog.dispose();
 				}
 				frame.setEnabled(true);
@@ -257,10 +259,8 @@ public class App
 		try 
 		{
 			String[] boneNames = Main.getBoneNames(new File("bone-ids.csv"));
-			String[] boneNamesSimple = new String[55];
-			System.arraycopy(boneNames, 0, boneNamesSimple, 0, boneNamesSimple.length);
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			setApp(boneNamesSimple);
+			setApp(boneNames);
 		} 
 		catch (Exception e) 
 		{

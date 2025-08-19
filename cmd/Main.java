@@ -1,5 +1,5 @@
 package cmd;
-//Tenkaichi ANM Tail Replacer by ViveTheModder
+//Tenkaichi ANM Bone Replacer by ViveTheModder
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -92,9 +92,10 @@ public class Main
 			if (srcAnms[i].isValidAnimation() && dstAnms[i].isValidAnimation())
 			{
 				changedAnms++;
-				if (!gui) System.out.println(srcFiles[i].getName()+" (src. ANM "+i+") -> "+dstFiles[i].getName()+" (dest. ANM "+i+")");
+				if (!gui) System.out.println(srcAnms[i].getFileName()+" (src. ANM "+i+") -> "+dstAnms[i].getFileName()+" (dest. ANM "+i+")");
 				else App.bar.setValue(changedAnms);
-				dstAnms[i].replaceBoneContents(srcAnms[i],boneIds[0],boneIds[1]);
+				dstAnms[i].replaceBoneContents(srcAnms[i],boneIds[0],boneIds[1],boneNames);
+				error+=dstAnms[i].getAnmError();
 			}
 			else
 			{
@@ -140,7 +141,7 @@ public class Main
 						if (input.matches("\\d+"))
 						{
 							boneIds[i] = Integer.parseInt(input);
-							if (boneIds[i]>54) boneIds[i]=54;
+							if (boneIds[i]>67) boneIds[i]=67;
 						}
 					}
 				}
